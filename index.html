@@ -546,25 +546,48 @@
 
         // --------------------------------------------------------------------------------
         // RUTAS DE AUDIO FINALES (Usando la carpeta 'Audio' de tu repositorio)
-        // Los nombres de archivo se usan tal cual fueron subidos a la carpeta Audio/
+        // Corregido el nombre de "musica_batalla" sin tilde.
         const driveDownloadUrls = {
             menu: 'Audio/musica_menu.mp3', 
-            battle: 'Audio/música_batalla.mp3',
+            battle: 'Audio/musica_batalla.mp3', // RUTA CORREGIDA (sin tilde)
             sword: 'Audio/golpe_espada.mp3',
             enemy: 'Audio/grito_enemigo.mp3'
         };
         // --------------------------------------------------------------------------------
 
         function setupAudioSources() {
-            // Asigna las URLs de GitHub (rutas relativas) a los elementos de audio
-            menuMusic.src = driveDownloadUrls.menu;
-            battleMusic.src = driveDownloadUrls.battle;
-            swordSound.src = driveDownloadUrls.sword;
-            // Ambos sonidos (golpe y muerte) usan el mismo archivo
-            enemyHitSound.src = driveDownloadUrls.enemy;
-            enemyDeathSound.src = driveDownloadUrls.enemy;
+            // Configuración con doble formato (MP3 y OGG) para máxima compatibilidad
             
-            showMessage('✅ Audio cargado desde GitHub');
+            // Música del Menú
+            menuMusic.innerHTML = `
+                <source src="${driveDownloadUrls.menu}" type="audio/mp3">
+                <source src="Audio/musica_menu.ogg" type="audio/ogg">`;
+            
+            // Música de Batalla
+            battleMusic.innerHTML = `
+                <source src="${driveDownloadUrls.battle}" type="audio/mp3">
+                <source src="Audio/musica_batalla.ogg" type="audio/ogg">`;
+
+            // Efectos de sonido (asumimos que los OGG tienen el mismo nombre)
+            swordSound.innerHTML = `
+                <source src="${driveDownloadUrls.sword}" type="audio/mp3">
+                <source src="Audio/golpe_espada.ogg" type="audio/ogg">`;
+
+            enemyHitSound.innerHTML = `
+                <source src="${driveDownloadUrls.enemy}" type="audio/mp3">
+                <source src="Audio/grito_enemigo.ogg" type="audio/ogg">`;
+
+            enemyDeathSound.innerHTML = `
+                <source src="${driveDownloadUrls.enemy}" type="audio/mp3">
+                <source src="Audio/grito_enemigo.ogg" type="audio/ogg">`;
+
+            // Forzar la carga de los elementos de audio
+            menuMusic.load();
+            battleMusic.load();
+            swordSound.load();
+            enemyHitSound.load();
+            
+            showMessage('✅ Audio configurado con doble formato.');
         }
 
         // --- FUNCIONES DE CONTROL DE AUTOPLAY Y ORIENTACIÓN ---
