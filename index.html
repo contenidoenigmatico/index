@@ -1,0 +1,1008 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metal Slug Mental Combat</title>
+    <style>
+        /* ... (CSS completo sin cambios) ... */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Pantallas */
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a1a, #2d1b0e);
+            z-index: 100;
+        }
+
+        #menuScreen {
+            background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
+        #characterScreen {
+            display: none;
+            background: url('https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+        }
+
+        #gameScreen {
+            display: none;
+        }
+
+        .title {
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px #ff0000, 0 0 30px #ff6b00;
+            background: linear-gradient(45deg, #ff0000, #ff6b00, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            color: #ffd700;
+        }
+
+        /* Selección de personajes */
+        .character-selection {
+            display: flex;
+            gap: 30px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .character-card {
+            width: 150px;
+            height: 200px;
+            background: rgba(139, 69, 19, 0.8);
+            border: 3px solid #8b4513;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .character-card:hover {
+            transform: scale(1.1);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .character-card.selected {
+            border-color: #ff0000;
+            background: rgba(255, 0, 0, 0.3);
+            box-shadow: 0 0 30px #ff0000;
+        }
+
+        .character-avatar {
+            font-size: 4em;
+            margin-bottom: 10px;
+        }
+
+        .character-name {
+            font-size: 1.2em;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
+        .character-stats {
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .input-group {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        input {
+            padding: 15px 25px;
+            font-size: 1.3em;
+            border: none;
+            border-radius: 10px;
+            background: rgba(139, 69, 19, 0.8);
+            color: #ffd700;
+            text-align: center;
+            border: 3px solid #8b4513;
+            font-weight: bold;
+        }
+
+        input::placeholder {
+            color: rgba(255, 215, 0, 0.6);
+        }
+
+        .btn {
+            padding: 18px 35px;
+            font-size: 1.4em;
+            background: linear-gradient(45deg, #8b4513, #d2691e);
+            border: none;
+            border-radius: 15px;
+            color: #ffd700;
+            cursor: pointer;
+            margin: 15px;
+            transition: all 0.3s;
+            font-weight: bold;
+            border: 3px solid #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+            background: linear-gradient(45deg, #d2691e, #8b4513);
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .btn-start {
+            background: linear-gradient(45deg, #ff0000, #ff6b00);
+            border-color: #ff0000;
+        }
+        /* Juego */
+        .game-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            background: url('https://images.unsplash.com/photo-1534423861386-85a16f5d13fd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
+            background-size: cover;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 10;
+            background: rgba(139, 69, 19, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #ffd700;
+        }
+
+        .health-container {
+            margin-bottom: 15px;
+        }
+
+        .health-bar {
+            width: 250px;
+            height: 25px;
+            background: #3a1f0f;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+
+        .health-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #ff6b00, #00ff00);
+            width: 100%;
+            transition: width 0.3s;
+        }
+
+        .stats {
+            font-size: 1.3em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .player-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.4em;
+            background: rgba(139, 69, 19, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 3px solid #ffd700;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        .character-hud {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        /* Controles móviles */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            z-index: 50;
+        }
+
+        .joystick-container {
+            width: 130px;
+            height: 130px;
+            position: relative;
+        }
+
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(139, 69, 19, 0.8) 0%, rgba(101, 67, 33, 0.6) 100%);
+            border: 4px solid #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+        }
+
+        .joystick-handle {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: radial-gradient(circle, #ffd700 0%, #d2691e 100%);
+            border-radius: 50%;
+            top: 35px;
+            left: 35px;
+            transition: transform 0.1s;
+            border: 3px solid #8b4513;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .action-btn {
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(139, 69, 19, 0.9) 0%, rgba(101, 67, 33, 0.7) 100%);
+            border: 4px solid #ffd700;
+            border-radius: 50%;
+            color: #ffd700;
+            font-size: 2em;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.3);
+            transition: all 0.2s;
+        }
+
+        .action-btn:active {
+            transform: scale(0.9);
+            background: radial-gradient(circle, #d2691e 0%, #8b4513 100%);
+        }
+
+        .attack-btn {
+            background: radial-gradient(circle, rgba(255, 0, 0, 0.7) 0%, rgba(139, 0, 0, 0.5) 100%);
+        }
+
+        /* Efectos */
+        .sword-slash {
+            position: absolute;
+            width: 100px;
+            height: 30px;
+            background: linear-gradient(90deg, transparent, #ffff00, #ff6b00, transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: slash 0.3s ease-out;
+            z-index: 20;
+        }
+
+        @keyframes slash {
+            0% { transform: scale(0.5) rotate(0deg); opacity: 1; }
+            100% { transform: scale(2) rotate(45deg); opacity: 0; }
+        }
+
+        .blood-effect {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            background: radial-gradient(circle, #ff0000 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: blood 0.5s ease-out;
+        }
+
+        @keyframes blood {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen" id="menuScreen">
+        <h1 class="title">⚔️ METAL SLUG MENTAL ⚔️</h1>
+        <p class="subtitle">¡Elige tu destino, guerrero!</p>
+        
+        <div class="input-group">
+            <input type="text" id="nicknameInput" placeholder="Nombre del Guerrero" maxlength="15">
+        </div>
+        
+        <button class="btn" onclick="showCharacterSelection()">🎭 ELEGIR PERSONAJE</button>
+        <button class="btn" onclick="toggleFullscreen()">📺 PANTALLA COMPLETA</button>
+    </div>
+
+    <div class="screen" id="characterScreen">
+        <h1 class="title">🎭 ELIGE TU GUERRERO</h1>
+        <p class="subtitle" id="selectedCharacterText">Selecciona un personaje</p>
+        
+        <div class="character-selection">
+            <div class="character-card" onclick="selectCharacter('knight')">
+                <div class="character-avatar">🛡️</div>
+                <div class="character-name">CABALLERO</div>
+                <div class="character-stats">
+                    ❤️ Vida: 120<br>
+                    ⚔️ Daño: 8<br>
+                    🛡️ Defensa: Alta
+                </div>
+            </div>
+
+            <div class="character-card" onclick="selectCharacter('archer')">
+                <div class="character-avatar">🏹</div>
+                <div class="character-name">ARQUERO</div>
+                <div class="character-stats">
+                    ❤️ Vida: 80<br>
+                    ⚔️ Daño: 12<br>
+                    🎯 Precisión: Alta
+                </div>
+            </div>
+
+            <div class="character-card" onclick="selectCharacter('mage')">
+                <div class="character-avatar">🔮</div>
+                <div class="character-name">MAGO</div>
+                <div class="character-stats">
+                    ❤️ Vida: 70<br>
+                    ⚔️ Daño: 15<br>
+                    ✨ Magia: Máxima
+                </div>
+            </div>
+
+            <div class="character-card" onclick="selectCharacter('barbarian')">
+                <div class="character-avatar">🪓</div>
+                <div class="character-name">BÁRBARO</div>
+                <div class="character-stats">
+                    ❤️ Vida: 150<br>
+                    ⚔️ Daño: 10<br>
+                    💪 Fuerza: Máxima
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-start" onclick="startGame()" id="startBtn" disabled>⚔️ INICIAR BATALLA</button>
+        <button class="btn" onclick="backToMenu()">🔙 VOLVER</button>
+    </div>
+
+    <div class="screen" id="gameScreen">
+        <div class="game-container">
+            <canvas id="gameCanvas"></canvas>
+            
+            <div class="hud">
+                <div class="health-container">
+                    <div class="health-bar">
+                        <div class="health-fill" id="healthBar"></div>
+                    </div>
+                    <div class="stats">SALUD: <span id="healthText">100</span></div>
+                </div>
+                <div class="stats">PUNTOS: <span id="score">0</span></div>
+                <div class="stats">OLEADA: <span id="wave">1</span></div>
+            </div>
+
+            <div class="player-info">
+                <div class="character-hud" id="characterHud">🛡️</div>
+                <div class="stats" id="hudNickname">GUERRERO</div>
+                <div class="stats" id="attackCooldown">🗡️ LISTA</div>
+            </div>
+
+            <div class="controls">
+                <div class="joystick-container">
+                    <div class="joystick-base" id="joystickBase">
+                        <div class="joystick-handle" id="joystickHandle"></div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <div class="action-btn attack-btn" id="attackBtn">🗡️</div>
+                    <div class="action-btn" id="specialBtn">✨</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="menuMusic"></audio>
+    <audio id="battleMusic" loop></audio>
+    <audio id="swordSound"></audio>
+    <audio id="enemyHitSound"></audio>
+    <audio id="enemyDeathSound"></audio>
+
+    <script>
+        // =============================================
+        // SISTEMA DE PERSONAJES Y MÚSICA
+        // =============================================
+
+        // Variables del juego
+        let gameState = {
+            player: {
+                x: 400,
+                y: 300,
+                width: 60,
+                height: 80,
+                speed: 6,
+                health: 100,
+                maxHealth: 100,
+                score: 0,
+                nickname: "GUERRERO",
+                character: null,
+                attackCooldown: 0,
+                lastAttack: 0,
+                wave: 1
+            },
+            enemies: [],
+            attacks: [],
+            particles: [],
+            joystick: {
+                active: false,
+                x: 0,
+                y: 0
+            }
+        };
+
+        // Sistema de personajes
+        const characters = {
+            knight: {
+                name: "CABALLERO",
+                emoji: "🛡️",
+                health: 120,
+                damage: 8,
+                speed: 5,
+                color: "#8b4513",
+                special: "Escudo Protector"
+            },
+            archer: {
+                name: "ARQUERO",
+                emoji: "🏹", 
+                health: 80,
+                damage: 12,
+                speed: 7,
+                color: "#228b22",
+                special: "Flechas Múltiples"
+            },
+            mage: {
+                name: "MAGO",
+                emoji: "🔮",
+                health: 70,
+                damage: 15,
+                speed: 6,
+                color: "#8a2be2",
+                special: "Bola de Fuego"
+            },
+            barbarian: {
+                name: "BÁRBARO",
+                emoji: "🪓",
+                health: 150,
+                damage: 10,
+                speed: 4,
+                color: "#b22222",
+                special: "Furia Berserker"
+            }
+        };
+
+        // Elementos DOM
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const menuScreen = document.getElementById('menuScreen');
+        const characterScreen = document.getElementById('characterScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const selectedCharacterText = document.getElementById('selectedCharacterText');
+        const startBtn = document.getElementById('startBtn');
+        const characterHud = document.getElementById('characterHud');
+        const hudNickname = document.getElementById('hudNickname');
+        const healthBar = document.getElementById('healthBar');
+        const healthText = document.getElementById('healthText');
+        const scoreDisplay = document.getElementById('score');
+        const waveDisplay = document.getElementById('wave');
+        const attackCooldownDisplay = document.getElementById('attackCooldown');
+
+        // Elementos de audio
+        const menuMusic = document.getElementById('menuMusic');
+        const battleMusic = document.getElementById('battleMusic');
+        const swordSound = document.getElementById('swordSound');
+        const enemyHitSound = document.getElementById('enemyHitSound');
+        const enemyDeathSound = document.getElementById('enemyDeathSound');
+
+        // URLS DE AUDIO CONFIGURADAS DESDE GOOGLE DRIVE (FORMATO DE DESCARGA DIRECTA)
+        // --------------------------------------------------------------------------------
+        // Hemos extraído el ID de cada archivo para generar la URL de descarga directa.
+        const driveDownloadUrls = {
+            // Música de Menú: 1v_x_x7UFWuF9qCqKKnMhK-YHm27n7b-q
+            menu: 'https://drive.google.com/uc?export=download&id=1v_x_x7UFWuF9qCqKKnMhK-YHm27n7b-q',
+            // Música de Batalla: 1N0reG63cd_57AbPPYOpw8r5ARNqJCbKe
+            battle: 'https://drive.google.com/uc?export=download&id=1N0reG63cd_57AbPPYOpw8r5ARNqJCbKe',
+            // Sonido de Enemigo (Golpe/Muerte): 10O051CYKi4q1F2gGGov9zW4LTT4fgwu5
+            enemy: 'https://drive.google.com/uc?export=download&id=10O051CYKi4q1F2gGGov9zW4LTT4fgwu5',
+            // Sonido de Espada/Ataque: 10zWidDnWUW69Np9V-TyNhXZzMAvRsOSl
+            sword: 'https://drive.google.com/uc?export=download&id=10zWidDnWUW69Np9V-TyNhXZzMAvRsOSl'
+        };
+        // --------------------------------------------------------------------------------
+
+        function setupAudioSources() {
+            // Asigna las URLs de Drive a los elementos de audio
+            menuMusic.src = driveDownloadUrls.menu;
+            battleMusic.src = driveDownloadUrls.battle;
+            swordSound.src = driveDownloadUrls.sword;
+            enemyHitSound.src = driveDownloadUrls.enemy;
+            enemyDeathSound.src = driveDownloadUrls.enemy;
+            
+            showMessage('✅ Audio cargado desde Google Drive');
+        }
+
+        // --- FUNCIONES DE CONTROL DE AUTOPLAY (NUEVO) ---
+        function attemptPlay(audioElement) {
+            audioElement.play().catch(e => {
+                console.warn("Autoplay bloqueado. Intentando desbloqueo...");
+                // Si la reproducción falla, añadimos listeners para desbloquear con el primer clic/toque
+                document.addEventListener('touchstart', unlockAudio, { once: true });
+                document.addEventListener('mousedown', unlockAudio, { once: true });
+                showMessage("⚠️ Toca/Haz click en la pantalla para desbloquear el audio.");
+            });
+        }
+
+        function unlockAudio() {
+            // Intenta reproducir todos los elementos de audio al primer clic del usuario
+            menuMusic.play().catch(()=>{}); 
+            battleMusic.play().catch(()=>{}); 
+            swordSound.play().catch(()=>{}); 
+            enemyHitSound.play().catch(()=>{}); 
+            enemyDeathSound.play().catch(()=>{}); 
+            
+            // Pausa y resetea la música de fondo para que empiece correctamente
+            menuMusic.pause();
+            menuMusic.currentTime = 0;
+
+            // Elimina los listeners de desbloqueo
+            document.removeEventListener('touchstart', unlockAudio);
+            document.removeEventListener('mousedown', unlockAudio);
+        }
+        // ------------------------------------------------
+
+        // Selección de personaje
+        function showCharacterSelection() {
+            const nick = document.getElementById('nicknameInput').value.trim() || "GUERRERO";
+            gameState.player.nickname = nick.toUpperCase();
+            
+            menuScreen.style.display = 'none';
+            characterScreen.style.display = 'flex';
+            
+            // 1. CARGA LAS FUENTES DE AUDIO
+            setupAudioSources();
+            
+            // 2. Intenta reproducir música de menú
+            menuMusic.loop = true;
+            menuMusic.volume = 0.5;
+            attemptPlay(menuMusic); // Usamos la nueva función de intento de reproducción
+        }
+
+        function backToMenu() {
+            characterScreen.style.display = 'none';
+            menuScreen.style.display = 'flex';
+            menuMusic.pause();
+        }
+
+        function selectCharacter(characterType) {
+            // Remover selección anterior
+            document.querySelectorAll('.character-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            
+            // Seleccionar nuevo personaje
+            event.currentTarget.classList.add('selected');
+            gameState.player.character = characterType;
+            
+            const char = characters[characterType];
+            selectedCharacterText.textContent = `Seleccionado: ${char.name}`;
+            selectedCharacterText.style.color = char.color;
+            
+            startBtn.disabled = false;
+        }
+
+        function startGame() {
+            if (!gameState.player.character) return;
+
+            characterScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+            
+            // Configurar personaje seleccionado
+            const char = characters[gameState.player.character];
+            gameState.player.maxHealth = char.health;
+            gameState.player.health = char.health;
+            gameState.player.speed = char.speed;
+            
+            // Actualizar HUD
+            characterHud.textContent = char.emoji;
+            hudNickname.textContent = gameState.player.nickname;
+            characterHud.style.color = char.color;
+
+            // Cambiar música
+            menuMusic.pause();
+            battleMusic.loop = true;
+            battleMusic.volume = 0.4;
+            attemptPlay(battleMusic); // Usamos la nueva función de intento de reproducción
+
+            initCanvas();
+            initGame();
+            initMobileControls();
+            gameLoop();
+        }
+
+        // ... (El resto del código del juego, controles y renderizado se mantiene igual)
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        function showMessage(message) {
+            const msg = document.createElement('div');
+            msg.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0, 0, 0, 0.9);
+                color: #00ff00;
+                padding: 20px;
+                border-radius: 10px;
+                border: 2px solid #00ff00;
+                z-index: 1000;
+                font-size: 1.2em;
+            `;
+            msg.textContent = message;
+            document.body.appendChild(msg);
+            
+            setTimeout(() => {
+                msg.remove();
+            }, 2000);
+        }
+
+        // =============================================
+        // CONTROLES Y MECÁNICAS DEL JUEGO 
+        // =============================================
+
+        function initMobileControls() {
+            const joystickBase = document.getElementById('joystickBase');
+            const joystickHandle = document.getElementById('joystickHandle');
+            const attackBtn = document.getElementById('attackBtn');
+
+            joystickBase.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                gameState.joystick.active = true;
+                updateJoystick(e.touches[0]);
+            });
+
+            document.addEventListener('touchmove', (e) => {
+                if (!gameState.joystick.active) return;
+                e.preventDefault();
+                updateJoystick(e.touches[0]);
+            });
+
+            document.addEventListener('touchend', () => {
+                gameState.joystick.active = false;
+                joystickHandle.style.transform = 'translate(0px, 0px)';
+                gameState.joystick.x = 0;
+                gameState.joystick.y = 0;
+            });
+
+            function updateJoystick(touch) {
+                const rect = joystickBase.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                
+                let deltaX = touch.clientX - centerX;
+                let deltaY = touch.clientY - centerY;
+                
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                const maxDistance = rect.width / 3;
+                
+                if (distance > maxDistance) {
+                    deltaX = (deltaX / distance) * maxDistance;
+                    deltaY = (deltaY / distance) * maxDistance;
+                }
+                
+                joystickHandle.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+                
+                gameState.joystick.x = deltaX / maxDistance;
+                gameState.joystick.y = deltaY / maxDistance;
+            }
+
+            attackBtn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                attack();
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const key = e.key.toLowerCase();
+            if (key === ' ' || key === 'x') {
+                attack();
+            }
+        });
+
+        function attack() {
+            const now = Date.now();
+            if (now - gameState.player.lastAttack < 500) return;
+
+            gameState.player.lastAttack = now;
+
+            const attackArea = {
+                x: gameState.player.x - 30,
+                y: gameState.player.y - 30,
+                width: gameState.player.width + 60,
+                height: gameState.player.height + 60,
+                life: 10
+            };
+            gameState.attacks.push(attackArea);
+
+            createSwordSlash(gameState.player.x + gameState.player.width / 2, 
+                           gameState.player.y + gameState.player.height / 2);
+
+            swordSound.currentTime = 0;
+            swordSound.play();
+            updateAttackCooldown();
+        }
+
+        function createSwordSlash(x, y) {
+            const slash = document.createElement('div');
+            slash.className = 'sword-slash';
+            slash.style.left = (x - 50) + 'px';
+            slash.style.top = (y - 15) + 'px';
+            document.body.appendChild(slash);
+            setTimeout(() => slash.remove(), 300);
+        }
+
+        function createBloodEffect(x, y) {
+            const blood = document.createElement('div');
+            blood.className = 'blood-effect';
+            blood.style.left = (x - 25) + 'px';
+            blood.style.top = (y - 25) + 'px';
+            document.body.appendChild(blood);
+            setTimeout(() => blood.remove(), 500);
+        }
+
+        function updateAttackCooldown() {
+            const cooldown = 500 - (Date.now() - gameState.player.lastAttack);
+            if (cooldown > 0) {
+                attackCooldownDisplay.textContent = '🗡️ ' + Math.ceil(cooldown / 100) + '0%';
+                attackCooldownDisplay.style.color = '#ff6b00';
+            } else {
+                attackCooldownDisplay.textContent = '🗡️ LISTA';
+                attackCooldownDisplay.style.color = '#00ff00';
+            }
+        }
+
+        function initGame() {
+            gameState.enemies = [];
+            gameState.attacks = [];
+            gameState.player.health = gameState.player.maxHealth;
+            gameState.player.score = 0;
+            gameState.player.wave = 1;
+            gameState.player.x = canvas.width / 2;
+            gameState.player.y = canvas.height / 2;
+
+            for (let i = 0; i < 3; i++) {
+                spawnEnemy();
+            }
+
+            setInterval(spawnEnemy, 4000);
+            setInterval(() => {
+                gameState.player.wave++;
+                waveDisplay.textContent = gameState.player.wave;
+            }, 30000); // Nueva oleada cada 30 segundos
+        }
+
+        function spawnEnemy() {
+            const side = Math.floor(Math.random() * 4);
+            let x, y;
+
+            switch(side) {
+                case 0: x = Math.random() * canvas.width; y = -80; break;
+                case 1: x = canvas.width + 80; y = Math.random() * canvas.height; break;
+                case 2: x = Math.random() * canvas.width; y = canvas.height + 80; break;
+                case 3: x = -80; y = Math.random() * canvas.height; break;
+            }
+
+            gameState.enemies.push({
+                x: x,
+                y: y,
+                width: 50,
+                height: 50,
+                speed: 1.5 + Math.random() * 1.5,
+                health: 2,
+                maxHealth: 2,
+                type: Math.random() > 0.7 ? 'boss' : 'normal'
+            });
+        }
+
+        function update() {
+            updatePlayer();
+            updateAttacks();
+            updateEnemies();
+            checkCollisions();
+            updateAttackCooldown();
+        }
+
+        function updatePlayer() {
+            const player = gameState.player;
+            if (gameState.joystick.active) {
+                player.x += gameState.joystick.x * player.speed;
+                player.y += gameState.joystick.y * player.speed;
+            }
+            player.x = Math.max(0, Math.min(canvas.width - player.width, player.x));
+            player.y = Math.max(0, Math.min(canvas.height - player.height, player.y));
+        }
+
+        function updateAttacks() {
+            gameState.attacks = gameState.attacks.filter(attack => {
+                attack.life--;
+                return attack.life > 0;
+            });
+        }
+
+        function updateEnemies() {
+            const player = gameState.player;
+            gameState.enemies.forEach(enemy => {
+                const dx = player.x - enemy.x;
+                const dy = player.y - enemy.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance > 0) {
+                    enemy.x += (dx / distance) * enemy.speed;
+                    enemy.y += (dy / distance) * enemy.speed;
+                }
+            });
+        }
+
+        function checkCollisions() {
+            const player = gameState.player;
+
+            gameState.attacks.forEach(attack => {
+                gameState.enemies.forEach((enemy, enemyIndex) => {
+                    if (isColliding(attack, enemy)) {
+                        enemy.health--;
+                        createBloodEffect(enemy.x + enemy.width/2, enemy.y + enemy.height/2);
+                        swordSound.currentTime = 0; 
+                        swordSound.play(); 
+
+                        if (enemy.health <= 0) {
+                            gameState.enemies.splice(enemyIndex, 1);
+                            gameState.player.score += enemy.type === 'boss' ? 300 : 100;
+                            enemyDeathSound.currentTime = 0;
+                            enemyDeathSound.play();
+                            setTimeout(spawnEnemy, 1000);
+                        }
+                    }
+                });
+            });
+
+            gameState.enemies.forEach(enemy => {
+                if (isColliding(player, enemy)) {
+                    player.health -= 0.3;
+                    if (player.health <= 0) {
+                        gameOver();
+                    }
+                }
+            });
+        }
+
+        function isColliding(obj1, obj2) {
+            return obj1.x < obj2.x + obj2.width &&
+                   obj1.x + obj1.width > obj2.x &&
+                   obj1.y < obj2.y + obj2.height &&
+                   obj1.y + obj1.height > obj2.y;
+        }
+
+        function gameOver() {
+            alert(`💀 GAME OVER\nPuntuación: ${gameState.player.score}\nOleada: ${gameState.player.wave}\nGuerrero: ${gameState.player.nickname}`);
+            gameScreen.style.display = 'none';
+            menuScreen.style.display = 'flex';
+            battleMusic.pause();
+            menuMusic.play();
+        }
+
+        function render() {
+            ctx.fillStyle = '#1a1a1a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Dibujar jugador según personaje
+            const char = characters[gameState.player.character];
+            ctx.fillStyle = char.color;
+            ctx.fillRect(gameState.player.x, gameState.player.y, gameState.player.width, gameState.player.height);
+            
+            // Detalles del personaje
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(gameState.player.x + 10, gameState.player.y + 10, 40, 20);
+            ctx.fillStyle = '#c0c0c0';
+            ctx.fillRect(gameState.player.x + 50, gameState.player.y + 30, 20, 40);
+            
+            // Dibujar enemigos
+            gameState.enemies.forEach(enemy => {
+                ctx.fillStyle = enemy.type === 'boss' ? '#8b0000' : '#2d1b0e';
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(enemy.x + 10, enemy.y, 30, 10);
+                
+                const healthPercent = enemy.health / enemy.maxHealth;
+                ctx.fillStyle = '#3a1f0f';
+                ctx.fillRect(enemy.x, enemy.y - 15, enemy.width, 8);
+                ctx.fillStyle = healthPercent > 0.5 ? '#00ff00' : healthPercent > 0.25 ? '#ffa500' : '#ff0000';
+                ctx.fillRect(enemy.x, enemy.y - 15, enemy.width * healthPercent, 8);
+            });
+
+            // Dibujar ataques
+            gameState.attacks.forEach(attack => {
+                ctx.strokeStyle = '#ffff00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(attack.x, attack.y, attack.width, attack.height);
+            });
+
+            // Actualizar HUD
+            const healthPercent = (gameState.player.health / gameState.player.maxHealth) * 100;
+            healthBar.style.width = `${healthPercent}%`;
+            healthText.textContent = Math.max(0, Math.floor(gameState.player.health));
+            scoreDisplay.textContent = gameState.player.score;
+            waveDisplay.textContent = gameState.player.wave;
+        }
+
+        function gameLoop() {
+            update();
+            render();
+            requestAnimationFrame(gameLoop);
+        }
+
+        window.addEventListener('load', () => {
+            initCanvas();
+            window.addEventListener('resize', initCanvas);
+        });
+    </script>
+</body>
+</html>
