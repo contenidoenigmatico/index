@@ -1,11 +1,10 @@
-<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Metal Slug Mental Combat</title>
     <style>
-        /* ... (CSS completo sin cambios) ... */
         * {
             margin: 0;
             padding: 0;
@@ -37,6 +36,7 @@
         }
 
         #menuScreen {
+            /* Puedes usar imágenes propias en GitHub o dejar estas de ejemplo */
             background: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80');
             background-size: cover;
             background-position: center;
@@ -544,37 +544,34 @@
         const enemyHitSound = document.getElementById('enemyHitSound');
         const enemyDeathSound = document.getElementById('enemyDeathSound');
 
-        // URLS DE AUDIO CONFIGURADAS DESDE GOOGLE DRIVE (FORMATO DE DESCARGA DIRECTA)
         // --------------------------------------------------------------------------------
-        // Hemos extraído el ID de cada archivo para generar la URL de descarga directa.
+        // RUTAS DE AUDIO FINALES (Usando la carpeta 'Audio' de tu repositorio)
+        // Los nombres de archivo se usan tal cual fueron subidos a la carpeta Audio/
         const driveDownloadUrls = {
-            // Música de Menú: 1v_x_x7UFWuF9qCqKKnMhK-YHm27n7b-q
-            menu: 'https://drive.google.com/uc?export=download&id=1v_x_x7UFWuF9qCqKKnMhK-YHm27n7b-q',
-            // Música de Batalla: 1N0reG63cd_57AbPPYOpw8r5ARNqJCbKe
-            battle: 'https://drive.google.com/uc?export=download&id=1N0reG63cd_57AbPPYOpw8r5ARNqJCbKe',
-            // Sonido de Enemigo (Golpe/Muerte): 10O051CYKi4q1F2gGGov9zW4LTT4fgwu5
-            enemy: 'https://drive.google.com/uc?export=download&id=10O051CYKi4q1F2gGGov9zW4LTT4fgwu5',
-            // Sonido de Espada/Ataque: 10zWidDnWUW69Np9V-TyNhXZzMAvRsOSl
-            sword: 'https://drive.google.com/uc?export=download&id=10zWidDnWUW69Np9V-TyNhXZzMAvRsOSl'
+            menu: 'Audio/musica_menu.mp3', 
+            battle: 'Audio/música_batalla.mp3',
+            sword: 'Audio/golpe_espada.mp3',
+            enemy: 'Audio/grito_enemigo.mp3'
         };
         // --------------------------------------------------------------------------------
 
         function setupAudioSources() {
-            // Asigna las URLs de Drive a los elementos de audio
+            // Asigna las URLs de GitHub (rutas relativas) a los elementos de audio
             menuMusic.src = driveDownloadUrls.menu;
             battleMusic.src = driveDownloadUrls.battle;
             swordSound.src = driveDownloadUrls.sword;
+            // Ambos sonidos (golpe y muerte) usan el mismo archivo
             enemyHitSound.src = driveDownloadUrls.enemy;
             enemyDeathSound.src = driveDownloadUrls.enemy;
             
-            showMessage('✅ Audio cargado desde Google Drive');
+            showMessage('✅ Audio cargado desde GitHub');
         }
 
-        // --- FUNCIONES DE CONTROL DE AUTOPLAY (NUEVO) ---
+        // --- FUNCIONES DE CONTROL DE AUTOPLAY Y ORIENTACIÓN ---
+        
         function attemptPlay(audioElement) {
             audioElement.play().catch(e => {
-                console.warn("Autoplay bloqueado. Intentando desbloqueo...");
-                // Si la reproducción falla, añadimos listeners para desbloquear con el primer clic/toque
+                // Si la reproducción falla (autoplay block), añadimos listeners para desbloquear
                 document.addEventListener('touchstart', unlockAudio, { once: true });
                 document.addEventListener('mousedown', unlockAudio, { once: true });
                 showMessage("⚠️ Toca/Haz click en la pantalla para desbloquear el audio.");
@@ -597,6 +594,17 @@
             document.removeEventListener('touchstart', unlockAudio);
             document.removeEventListener('mousedown', unlockAudio);
         }
+
+        function attemptLockOrientation() {
+            // Intenta bloquear en horizontal (landscape) si el dispositivo no lo está
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape')
+                    .then(() => console.log('Orientación bloqueada en horizontal.'))
+                    .catch((error) => console.warn('No se pudo bloquear la orientación:', error));
+            } else {
+                console.warn("API de orientación de pantalla no soportada.");
+            }
+        }
         // ------------------------------------------------
 
         // Selección de personaje
@@ -613,7 +621,7 @@
             // 2. Intenta reproducir música de menú
             menuMusic.loop = true;
             menuMusic.volume = 0.5;
-            attemptPlay(menuMusic); // Usamos la nueva función de intento de reproducción
+            attemptPlay(menuMusic);
         }
 
         function backToMenu() {
@@ -656,11 +664,14 @@
             hudNickname.textContent = gameState.player.nickname;
             characterHud.style.color = char.color;
 
+            // Intentar bloquear la orientación de la pantalla (SOLUCIÓN GITHUB PAGES)
+            attemptLockOrientation();
+
             // Cambiar música
             menuMusic.pause();
             battleMusic.loop = true;
             battleMusic.volume = 0.4;
-            attemptPlay(battleMusic); // Usamos la nueva función de intento de reproducción
+            attemptPlay(battleMusic);
 
             initCanvas();
             initGame();
@@ -834,7 +845,8 @@
                 spawnEnemy();
             }
 
-            setInterval(spawnEnemy, 4000);
+            // DIFICULTAD REDUCIDA: Aparece un enemigo cada 6 segundos (antes 4s)
+            setInterval(spawnEnemy, 6000); 
             setInterval(() => {
                 gameState.player.wave++;
                 waveDisplay.textContent = gameState.player.wave;
@@ -858,8 +870,9 @@
                 width: 50,
                 height: 50,
                 speed: 1.5 + Math.random() * 1.5,
-                health: 2,
-                maxHealth: 2,
+                // DIFICULTAD REDUCIDA: Los enemigos mueren de 1 golpe (antes 2)
+                health: 1, 
+                maxHealth: 1,
                 type: Math.random() > 0.7 ? 'boss' : 'normal'
             });
         }
